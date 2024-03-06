@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <!--
+      Created by Ithaca1937 for use with creating geocaching puzzles.
+      Date: 2023-01-08
+      User account: https://www.geocaching.com/profile/?guid=4589ad94-873d-4fdf-a91e-0935dad82b50
+    -->
+  <meta http-equiv="Content-Type" content="text/html; charset=utf8">
+  <title>ColorHoney Encoder</title>
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+  <style>
+    body {
+      background-color: #FFF;
+    }
+    
+    .canvaseHolder{
+      /*text-align: center;*/
+    }
+  
+    #calendarCanvas{
+      display: block;
+      /*margin: auto;*/
+      border: 1px solid #000;
+      max-width: 80%;
+    }
+
+    #inputText {
+      width:50%;
+      height: 50px;
+    }
+  </style>
+  <style type="text/css">.c1-ui-state-hover {background-color:yellow !important; padding:5px !important }</style>
+  <script>
+    linePx = 162;
+  </script>
+</head>
+
+
+<body>
+  <div id="inputArea">
+    <textarea id="inputText">Color     Honey 123!</textarea>
+  </div>
+
+  <div id="options">
+    <div id="optImageMaxWidth">
+      <input type="number" id="imageMaxWidth" name="imageMaxWidth" value="800" min="50" > <label for="imageMaxWidth">Image max width</label> 
+      <input type="number" id="imageMaxHeight" name="imageMaxHeight" value="162" min="162" /> <label for="imageMaxHeight">Image min height</label>
+      <br>
+      <input type="number" id="imageCharWidth" name="imageCharWidth" value="27" min="1"/> <label for="imageCharWidth">Image Character width</label> 
+      <input type="number" id="imageCharHeight" name="imageCharHeight" value="1" min="1" /> <label for="imageCharHeight">Image Character height</label>
+    </div>
+    <div id="optOutlineStroke">
+      <input type="checkbox" id="outlineStroke" name="outlineStroke" value="yes" checked /> <label for="outlineStroke">Outline Honeys</label>
+    </div>
+    <div id="optSpaceType">
+      <select type="radio" id="spaceType" value="blank">
+        <option value="outline" selected>Outline</option>
+        <option value="blank">Blank spot</option>
+        <option value="none">None</option>
+      </select> Spaces
+    </div>
+    <div id="optUppercaseStroke">
+      <input type="checkbox" id="uppercaseStroke" name="uppercaseStroke" value="yes" checked /> <label for="uppercaseStroke">Center line for uppercase</label>
+    </div>
+    <div id="optRemoveUnknown">
+      <input type="checkbox" id="removeUnknown" name="removeUnknown" value="yes" checked /> <label for="removeUnknown">Remove unknown characters</label>
+    </div>
+
+    <div id="optColors">
+      <input type="color" id="color1" name="color1" value="#ff0000" /> <label for="color1">Color 1</label>
+      <input type="color" id="color2" name="color2" value="#009900" /> <label for="color2">Color 2</label>
+      <input type="color" id="color3" name="color3" value="#0066ff" /> <label for="color3">Color 3</label>
+      <input type="color" id="color4" name="color4" value="#00ccff" /> <label for="color4">Color 4</label>
+      <input type="color" id="color5" name="color5" value="#cc66ff" /> <label for="color5">Color 5</label>
+      <input type="color" id="color6" name="color6" value="#ffcc00" /> <label for="color6">Color 6</label>
+    </div>
+
+    <div id="optBackgroundColor">
+      <input type="color" id="colorBg" name="colorBg" value="#ffffff" /> <label for="colorBg">Background Color</label>
+      <input type="checkbox" id="colorBgTrans" name="colorBgTrans" value="yes" checked /> <label for="colorBgTrans">Transparent Background</label>
+    </div>
+
+  </div>
+
+  <div class="canvaseHolder">
+    <canvas id="calendarCanvas" width="10" height="10">Your browser does not support the HTML5 canvas tag.</canvas>
+  </div>
+<script>
+
+Date.prototype.monthDays= function(){
+    var d= new Date(this.getFullYear(), this.getMonth()+1, 0);
+    return d.getDate();
+}
+
+function width4char(amount){
+  return (56 * (Math.ceil( (amount-1) / 2) + 1)) + 15;
+}
+
+function drawImage(){
+
+  //options
+  let spaceType = document.getElementById('spaceType').selectedOptions[0].value;
+  let removeUnkChars = document.getElementById('removeUnknown').checked;
+  let imageMaxWidth = parseInt(document.getElementById('imageMaxWidth').value);
+  let imageMaxHeight = parseInt(document.getElementById('imageMaxHeight').value);
+
+  let imageCharWidth = parseInt(document.getElementById('imageCharWidth').value);
+  let imageCharHeight = parseInt(document.getElementById('imageCharHeight').value);
+
+  let imageColorBg = document.getElementById('colorBg').value;
+  let transImageBg = document.getElementById('colorBgTrans').checked;
+  
+  var w = window,
+    d = document,
+    e = d.documentElement,
+    g = d.getElementsByTagName('body')[0],
+    x = w.innerWidth || e.clientWidth || g.clientWidth,
+    y = w.innerHeight|| e.clientHeight|| g.clientHeight;
+//alert(x + ' × ' + y);
+
+  let textIn = d.getElementById("inputText").value;
+  if(spaceType == 'none'){
+    textIn = textIn.replaceAll(' ','');
+  }
+  if(removeUnkChars){
+    textIn = textIn.replace(/[^a-zA-Z 0-9]/g, '');
+  }
+  //console.log(textIn);
+
+  let textInLen = textIn.length;
+
+
+  //let neededHeight = Math.ceil(neededWidth/minWidth)*131 + 31;
+  let neededHeight = (Math.ceil( (textInLen) / 27) * 132) + 26;
+  minHeight = Math.max(neededHeight, imageMaxHeight);
+  //console.log('Height calc: ' + textInLen + ' | ' + (textInLen) / 27 + ' | ' + Math.ceil( (textInLen) / 27) + ' | ' + neededHeight + ' | ' + linePx);
+  
+  var c = document.getElementById("calendarCanvas");
+  
+  c.width = Math.min(width4char(textInLen), width4char(imageCharWidth));;//800;
+  c.height = minHeight;//linePx;//600
+
+  //console.log('linePx ' + linePx + ' minHeight ' + minHeight);
+  
+  //console.log(x,y,c)
+  
+  var cwidth = c.width;
+  var cheight = c.height;
+
+  var wcenter = cwidth/2;
+  var hcenter = cheight/2;
+  
+  //console.log(wcenter, hcenter);
+  
+  var multiplier = cwidth/783;
+  
+  var ctx = c.getContext("2d");
+  ctx.imageSmoothingEnabled = true;
+
+  if(!transImageBg){
+    ctx.fillStyle = imageColorBg;
+    ctx.fillRect(0, 0, cwidth, cheight);
+  }
+
+  ctx.lineWidth = 20 * multiplier;
+
+  ctx.globalAlpha = 1.0;
+  
+  var d = new Date();
+  var sec = d.getSeconds();
+
+  //clear canvas
+  if(sec == 0){
+    ctx.clearRect(0, 0, c.width, c.height);
+  }
+  
+  /* text
+  ctx.font = (30 * multiplier) + "px Arial";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillStyle = '#000';
+  //ctx.strokeText('Test', wcenter, hcenter);
+  ctx.fillText('Test', wcenter, hcenter);
+  */
+  
+  let counter = 1;
+  let lineCounter = 0;
+  let honeyPos = 0;
+  let line = 25;
+  for(let i = 0; i < textInLen; i++){
+    let blockPos = (counter-1) % 4 + 1;
+
+    //console.log(textIn[i] + ' blockPos: ' + blockPos + ' honeyPos: ' + honeyPos);
+    drawHoney(ctx, honeyPos, line, textIn[i], counter);
+    
+    if(blockPos < 4){
+      honeyPos += 55;
+    } else {
+      honeyPos -= 52;
+    }
+
+    if(honeyPos + 56 > width4char(imageCharWidth)){ //cwidth; + 10 changed to 56
+      //console.log('new line');
+      counter += 1;
+      honeyPos = 0;
+      lineCounter++;
+      line += 131;
+    }
+
+    console.log('honeyPos ' + honeyPos + ' lineCounter ' + lineCounter + ' imageMaxWidth ' + imageMaxWidth + ' | ' + width4char(imageCharWidth));
+
+    counter++;
+  }
+}
+function fillColor(l){
+  let top = '#fff';
+  let bottom = '#fff';
+
+  let purple = '#cc66ff'
+  let cyan = '#00ccff';
+  let blue = '#0066ff';
+  let green = '#009900';
+  let yellow = '#ffcc00';
+  let red ='#ff0000';
+
+  let color1 = document.getElementById('color1').value;
+  let color2 = document.getElementById('color2').value;
+  let color3 = document.getElementById('color3').value;
+  let color4 = document.getElementById('color4').value;
+  let color5 = document.getElementById('color5').value;
+  let color6 = document.getElementById('color6').value;
+
+
+  let black = '#000';
+  let white = '#fff';
+
+  switch(l){
+    case 'A':
+      top = color5;
+      bottom = color5;
+      break;
+    case 'B':
+      top = color5;
+      bottom = color4;
+      break;
+    case 'C':
+      top = color5;
+      bottom = color3;
+      break;
+    case 'D':
+      top = color5;
+      bottom = color2;
+      break;
+    case 'E':
+      top = color1;
+      bottom = color1;
+      break;
+    case 'F':
+      top = color1;
+      bottom = color2;
+      break;
+    case 'G':
+      top = color1;
+      bottom = color3;
+      break;
+    case 'H':
+      top = color1;
+      bottom = color4;
+      break;
+    case 'I':
+      top = color2;
+      bottom = color2;
+      break;
+    case 'J':
+      top = color2;
+      bottom = color3;
+      break;
+    case 'K':
+      top = color2;
+      bottom = color4;
+      break;
+    case 'L':
+      top = color2;
+      bottom = color5;
+      break;
+    case 'M':
+      top = color2;
+      bottom = color6;
+      break;
+    case 'N':
+      top = color2;
+      bottom = color1;
+      break;
+    case 'O':
+      top = color6;
+      bottom = color6;
+      break;
+    case 'P':
+      top = color6;
+      bottom = color5;
+      break;
+    case 'Q':
+      top = color6;
+      bottom = color4;
+      break;
+    case 'R':
+      top = color6;
+      bottom = color3;
+      break;
+    case 'S':
+      top = color6;
+      bottom = color2;
+      break;
+    case 'T':
+      top = color1;
+      bottom = color2;
+      break;
+    case 'U':
+      top = color3;
+      bottom = color3;
+      break;
+    case 'V':
+      top = color3;
+      bottom = color4;
+      break;
+    case 'W':
+      top = color3;
+      bottom = color5;
+      break;
+    case 'X':
+      top = color3;
+      bottom = color6;
+      break;
+    case 'Y':
+      top = color4;
+      bottom = color4;
+      break;
+    case 'Z':
+      top = color4;
+      bottom = color3;
+      break;
+
+    case ' ':
+      top = white;
+      bottom = white;
+      break;
+
+    case '0':
+      top = color1;
+      bottom = color5;
+      break;
+    case '1':
+      top = color1;
+      bottom = color6;
+      break;
+    case '2':
+      top = color3;
+      bottom = color1;
+      break;
+    case '3':
+      top = color3;
+      bottom = color2;
+      break;
+    case '4':
+      top = color4;
+      bottom = color1;
+      break;
+    case '5':
+      top = color4;
+      bottom = color2;
+      break;
+    case '6':
+      top = color4;
+      bottom = color5;
+      break;
+    case '7':
+      top = color4;
+      bottom = color6;
+      break;
+    case '8':
+      top = color5;
+      bottom = color1;
+      break;
+    case '9':
+      top = color5;
+      bottom = color6;
+      break;
+    
+
+    default:
+      top = black;
+      bottom = black;
+  }
+
+  let out = {'top':top, 'bottom':bottom};
+
+  return out;
+}
+
+function drawHoney(ctx, x, y, rawChar, pos){
+
+  //option
+  let outline = document.getElementById("outlineStroke").checked;
+  //console.log('Outline: ' + outline ? 'yes' : 'no');
+  let spaceType = document.getElementById('spaceType').selectedOptions[0].value;
+  //console.log('spaceType: ' + spaceType);
+  let uppercaseStroke = document.getElementById("uppercaseStroke").checked;
+  let isUpperCaseChar = !(rawChar == rawChar.toLowerCase()) && rawChar != ' ';
+
+  if(rawChar == ' '){
+    if(spaceType == 'blank'){
+      outline = false;
+    }
+    if(spaceType == 'outline'){
+      outline = true;
+    }
+  }
+
+  pos = (pos-1) % 4 + 1;
+  w = 57.7;
+  h = 100;
+
+  x += 5;
+  y += 5;
+
+  xcenter = x+w*0.5;
+  ycenter = y+h*0.5;
+
+  let colors = fillColor(rawChar.toUpperCase());
+  //console.log(colors);
+  ctx.lineWidth = 1;
+
+
+  if(pos == 1){
+    ctx.translate(xcenter, ycenter);
+    ctx.rotate(30 * Math.PI / 180);
+    ctx.translate(-xcenter, -ycenter);
+  } else if(pos == 3){
+    x -= w-3;//becomes width
+    xcenter = x+w*0.5;
+    ycenter = y+h*0.5;
+
+    ctx.translate(xcenter, ycenter);
+    ctx.rotate(-30* Math.PI / 180);
+    ctx.translate(-xcenter, -ycenter);
+    
+    
+  } else if(pos == 2){
+    ctx.translate(xcenter, ycenter);
+    ctx.rotate(90 * Math.PI / 180);
+    ctx.translate(-xcenter, -ycenter);
+    x += h*0.5-1;//becomes height
+    y += w*0.5-1;//becomes width
+    xcenter = x+w*0.5;
+    ycenter = y+h*0.5;
+  } else if(pos == 4){
+    ctx.translate(xcenter, ycenter);
+    ctx.rotate(90 * Math.PI / 180);
+    ctx.translate(-xcenter, -ycenter);
+    x -= h*0.5-1;//becomes height
+    y += w*1.5-5;//becomes width
+    xcenter = x+w*0.5;
+    ycenter = y+h*0.5;
+  }
+
+ 
+
+  //top
+  ctx.fillStyle = colors.top;
+  ctx.beginPath();
+  ctx.moveTo(x, y+h*0.5+1);//bottom left
+  ctx.lineTo(x+w*0.5, y);//top center
+  ctx.lineTo(x+w, y+h*0.5+1);//bottom right
+  
+  ctx.fill();
+  if(outline){
+    ctx.stroke();
+  }
+  
+
+  //bottom
+  ctx.fillStyle = colors.bottom;
+  ctx.beginPath();
+  ctx.moveTo(x+w, y+h*0.5);
+  ctx.lineTo(x+w*0.5, y+h);
+  ctx.lineTo(x, y+h*0.5);
+  
+  ctx.fill();
+  if(outline){
+    ctx.stroke();
+  }
+
+  //console.log('uppercase: ' + (uppercaseStroke ? 'yes' : 'no') + ' ' + (isUpperCaseChar ? 'yes' : 'no'));
+  if(uppercaseStroke && isUpperCaseChar){
+    //add center stroke
+    ctx.lineWidth = 3;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(x+3, y+h*0.5);
+    ctx.lineTo(x+w-3, y+h*0.5);
+    ctx.stroke();
+  }
+
+  /*center dot
+  ctx.beginPath();
+  ctx.fillStyle = colors.bottom;
+  ctx.ellipse(xcenter, ycenter, 3, 3, 0, 0, 360);
+  ctx.fill();
+  ctx.stroke();
+  */
+
+  //ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.resetTransform();
+}
+
+
+window.onload = drawImage;
+document.getElementById('inputText').addEventListener('input', drawImage);
+document.getElementById('options').addEventListener('change', drawImage);
+//window.setInterval(drawImage, 100);
+
+
+</script> 
+
+
+
+</body></html>
